@@ -23,6 +23,17 @@ class TODOApp extends React.Component {
         this.setState({tasksDone: this.state.tasksDone.concat(doneTask)})
     };
 
+    deleteTodoTask(i) {
+        let notWantedTodoTask = this.tasksTodo(i);
+        this.setState({tasksTodo: this.state.tasksTodo.splice(i)})
+
+    }
+    deleteDoneTask(i) {
+        let notWantedDoneTask = this.tasksDone(i);
+        this.setState({tasksDone: this.state.tasksDone.splice(i)})
+    }
+
+
 render()
 {
     return (
@@ -30,6 +41,8 @@ render()
             <ToDos value={this.state.tasksTodo}/>
             <Done value={this.state.tasksDone}/>
             <MyForm value={this.addNewTask}/>
+            <MoveButton value={this.moveToDone}/>
+            <DeleteButton deleteTodo={this.deleteTodoTask} deleteDone={this.deleteDoneTask}/>
         </div>
     );
 }
@@ -71,7 +84,7 @@ class Done extends React.Component {
         return (
             <div><h1>Done:</h1>
                 <ol className="DoneList">
-                    {this.props.value.map(done => <li>{done}</li>)}
+                    {this.props.value.map(done => <div><li>{done}</li> <MyCheckbox/></div>)}
                 </ol>
             </div>
         );
@@ -83,26 +96,52 @@ class ToDos extends React.Component {
         return (
             <div><h1>To-do:</h1>
                 <ol className="To-do">
-                    {this.props.value.map(todo => <li>{todo}</li>)}
+                    {this.props.value.map(todo => <div><li>{todo}</li><MyCheckbox/></div>)}
                 </ol></div>
         );
     }
 }
 
 class MyCheckbox extends React.Component {
-    getCheckedIndex() {
+    constructor(props) {
+        super(props);
+        this.state = {
+            checked: false,
+        }
+        this.changeHandler = this.changeHandler.bind(this);
+    }
+
+    changeHandler (event) {
+        this.setState({checked: !(this.state.checked)});
+    }
+
+    render () {
+        return (
+            <input type="checkbox" onChange={this.changeHandler}/>
+        );
+    }
+}
+
+
+class DeleteButton extends React.Component {
+
+    submitHandler() {
 
     }
     render () {
         return (
-            <input type="checkbox" checked={this.getCheckedIndex()}/>
+            <button type="submit" onSubmit={this.submitHandler}>Удалить помеченные</button>
         );
     }
 }
-class DeleteButton extends React.Component {
+
+class MoveButton extends React.Component {
+    submitHandler() {
+
+    }
     render () {
         return (
-            <button>Удалить</button>
+            <button type="submit" onSubmit={this.submitHandler}>Выполнить помеченные</button>
         );
     }
 }
