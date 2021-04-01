@@ -6,46 +6,30 @@ class TODOApp extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            tasksTodo: ['kek', 'puk'],
-            tasksDone: ['lol', 'done'],
-            checked: [],
+            tasks: ['kek', 'puk', 'lol'],
         }
         this.addNewTask = this.addNewTask.bind(this);
+        this.deleteThisTask=this.deleteThisTask.bind(this);
     }
 
     addNewTask(task) {
-        this.setState({tasksTodo: this.state.tasksTodo.concat(task)})
+        this.setState({tasks: this.state.tasks.concat(task)})
     };
 
-    moveToDone(i) {
-        let doneTask = this.tasksTodo(i);
-        this.setState({tasksTodo: this.state.tasksTodo.splice(i)})
-        this.setState({tasksDone: this.state.tasksDone.concat(doneTask)})
-    };
-
-    deleteTodoTask(i) {
-        let notWantedTodoTask = this.tasksTodo(i);
-        this.setState({tasksTodo: this.state.tasksTodo.splice(i)})
-
-    }
-    deleteDoneTask(i) {
-        let notWantedDoneTask = this.tasksDone(i);
-        this.setState({tasksDone: this.state.tasksDone.splice(i)})
+    deleteThisTask(taskIndex) {
+        const newArr = [...this.state.tasks]
+        newArr.splice(taskIndex,1)
+        this.setState({tasks: newArr})
     }
 
-
-render()
-{
-    return (
-        <div>
-            <ToDos value={this.state.tasksTodo}/>
-            <Done value={this.state.tasksDone}/>
-            <MyForm value={this.addNewTask}/>
-            <MoveButton value={this.moveToDone}/>
-            <DeleteButton deleteTodo={this.deleteTodoTask} deleteDone={this.deleteDoneTask}/>
-        </div>
-    );
-}
+    render() {
+        return (
+            <div>
+                <Tasks value={this.state.tasks} deleteFunc={this.deleteThisTask}/>
+                <MyForm value={this.addNewTask}/>
+            </div>
+        );
+    }
 }
 
 
@@ -62,6 +46,7 @@ class MyForm extends React.Component {
     changeHandler(event) {
         this.setState({newTask: event.target.value});
     }
+
     submitHandler(event) {
         event.preventDefault();
         this.props.value(this.state.newTask);
@@ -79,72 +64,50 @@ class MyForm extends React.Component {
     }
 }
 
-class Done extends React.Component {
+class Tasks extends React.Component {
+
     render() {
         return (
-            <div><h1>Done:</h1>
+            <div><h1>Tasks:</h1>
                 <ol className="DoneList">
-                    {this.props.value.map(done => <div><li>{done}</li> <MyCheckbox/></div>)}
+                    {this.props.value.map(task => (<div>
+                        <ul>{task}</ul>
+                        <DoneButton/>
+                        <DeleteButton value={() => this.props.deleteFunc(this.props.value.indexOf(task))}/>
+                    </div>))}
                 </ol>
             </div>
         );
     }
 }
 
-class ToDos extends React.Component {
-    render() {
-        return (
-            <div><h1>To-do:</h1>
-                <ol className="To-do">
-                    {this.props.value.map(todo => <div><li>{todo}</li><MyCheckbox/></div>)}
-                </ol></div>
-        );
-    }
-}
 
-class MyCheckbox extends React.Component {
+
+class DoneButton extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            checked: false,
+            done: false,
         }
-        this.changeHandler = this.changeHandler.bind(this);
+        this.clickHandler = this.clickHandler.bind(this);
+    }
+    clickHandler(event) {
+        event.preventDefault();
+        this.setState({done: !this.state.done});
     }
 
-    changeHandler (event) {
-        this.setState({checked: !(this.state.checked)});
-    }
-
-    render () {
+    render() {
         return (
-            <input type="checkbox" onChange={this.changeHandler}/>
+            <button onClick={this.clickHandler}>{this.state.done ? '✓' : 'X'}</button>
         );
     }
 }
 
-
-class DeleteButton extends React.Component {
-
-    submitHandler() {
-
-    }
-    render () {
-        return (
-            <button type="submit" onSubmit={this.submitHandler}>Удалить помеченные</button>
-        );
-    }
+function DeleteButton (props) {
+    return <button onClick={props.value}>&#9746;</button>;
 }
 
-class MoveButton extends React.Component {
-    submitHandler() {
 
-    }
-    render () {
-        return (
-            <button type="submit" onSubmit={this.submitHandler}>Выполнить помеченные</button>
-        );
-    }
-}
 
 
 ReactDOM.render(
