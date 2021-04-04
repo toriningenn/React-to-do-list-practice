@@ -2,50 +2,65 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
+const todo = 'todo';
+const done = 'done';
+const stateKey = 'state';
+
 class TODOApp extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            tasks: ['kek', 'puk', 'lol', 'lkgl','wtf'],
+            tasks: ['kek', 'puk', 'lol', 'lkgl', 'wtf'],
             doneTasks: [],
         }
         this.addNewTask = this.addNewTask.bind(this);
         this.deleteThisTask = this.deleteThisTask.bind(this);
-        this.moveTask=this.moveTask.bind(this);
+        this.moveTask = this.moveTask.bind(this);
+        this.fromLocalStorage = this.fromLocalStorage.bind(this);
+    }
+
+
+    componentDidUpdate() {
+        localStorage.setItem(stateKey, JSON.stringify(this.state));
+        console.log(this.state);
+    }
+
+    fromLocalStorage() {
+        return JSON.parse(localStorage.getItem(stateKey));
+    }
+
+    componentDidMount() {
+        const stateObject = this.fromLocalStorage();
+        if (stateObject) {
+            this.setState(stateObject);
+        }
     }
 
     addNewTask(task) {
-        this.setState({tasks: this.state.tasks.concat(task)})
+        if (task) {
+            this.setState({tasks: this.state.tasks.concat(task)})
+        }
     };
 
     deleteThisTask(taskIndex, arr, listName) {
         const newArr = [...arr]
         newArr.splice(taskIndex, 1)
-        if (listName === 'done') {
+        if (listName === done) {
             this.setState({doneTasks: newArr})
         } else {
             this.setState({tasks: newArr})
         }
     }
 
-    moveTask(taskIndex, dest) {
-        let newArr;
-        let task;
-        switch(dest) {
-            case 'toDone':
-                newArr = [...this.state.doneTasks];
-                task = this.state.tasks[taskIndex];
-                this.deleteThisTask(taskIndex, this.state.tasks, 'todo')
-                newArr.push(task);
-                this.setState({doneTasks: newArr});
-                break;
-            case 'backToTodo':
-                newArr = [...this.state.tasks];
-                task = this.state.doneTasks[taskIndex];
-                this.deleteThisTask(taskIndex, this.state.doneTasks,'done')
-                newArr.push(task);
-                this.setState({tasks: newArr});
-                break;
+    moveTask(taskIndex, from, to, fromListName) {
+        let newArr = [...to];
+        let task = from[taskIndex];
+        newArr.push(task);
+        this.deleteThisTask(taskIndex, from, fromListName);
+        if (to === this.state.tasks) {
+            this.setState({tasks: newArr});
+        } else {
+            this.setState({doneTasks: newArr});
         }
     }
 
@@ -80,14 +95,14 @@ class MyForm extends React.Component {
     submitHandler(event) {
         event.preventDefault();
         this.props.value(this.state.newTask);
-        document.getElementById('task').value = '';
+        this.setState({newTask: ''});
     }
 
     render() {
         return (
             <form onSubmit={this.submitHandler}>
                 <label>Новая задача:</label>
-                <input id="task" type="text" onChange={this.changeHandler}/>
+                <input id="task" value={this.state.newTask} type="text" onChange={this.changeHandler}/>
                 <input type="submit"/>
             </form>
         );
@@ -101,33 +116,35 @@ class Tasks extends React.Component {
             <div><h1>Tasks:</h1>
                 <ol className="TasksList">
                     {this.props.todoList.map(task => (<div>
-                        <ul>{task}</ul>
-                        <DoneButton
-                            move={() =>
-                                this.props.moveFunc(this.props.todoList.indexOf(task),
-                                    'toDone')}
-                        look={'✓'}/>
-                        <DeleteButton
-                            value={() => this.props.deleteFunc(
-                                this.props.todoList.indexOf(task),
-                                this.props.todoList, 'todo'
-                            )}/>
+                        <ul className="taskName">
+                            <DoneButton
+                                move={() =>
+                                    this.props.moveFunc(this.props.todoList.indexOf(task),
+                                        this.props.todoList, this.props.doneList, todo)}
+                                look={'✓'}/>
+                            {task}
+                            <DeleteButton
+                                value={() => this.props.deleteFunc(
+                                    this.props.todoList.indexOf(task),
+                                    this.props.todoList, todo
+                                )}/></ul>
                     </div>))}
                 </ol>
                 <div><h1>Done:</h1>
                     <ol className="DoneList">
                         {this.props.doneList.map(task => (<div>
-                            <ul><s>{task}</s></ul>
-                            <DoneButton
-                                move={() =>
-                                    this.props.moveFunc(this.props.doneList.indexOf(task),
-                                        'backToTodo')}
-                                look={'X'}/>
-                            <DeleteButton
-                                value={() => this.props.deleteFunc(
-                                    this.props.doneList.indexOf(task),
-                                    this.props.doneList, 'done'
-                                )}/>
+                            <ul className="taskName">
+                                <DoneButton
+                                    move={() =>
+                                        this.props.moveFunc(this.props.doneList.indexOf(task),
+                                            this.props.doneList, this.props.todoList, done)}
+                                    look={'X'}/>
+                                <s>{task}</s>
+                                <DeleteButton
+                                    value={() => this.props.deleteFunc(
+                                        this.props.doneList.indexOf(task),
+                                        this.props.doneList, done
+                                    )}/></ul>
                         </div>))}
                     </ol>
                 </div>
@@ -150,13 +167,13 @@ class DoneButton extends React.Component {
 
     render() {
         return (
-            <button onClick={this.clickHandler}>{this.props.look}</button>
+            <button className="donebutton" onClick={this.clickHandler}>{this.props.look}</button>
         );
     }
 }
 
 function DeleteButton(props) {
-    return <button onClick={props.value}>&#9746;</button>;
+    return <button className="deletebutton" onClick={props.value}>&#9746;</button>;
 }
 
 
